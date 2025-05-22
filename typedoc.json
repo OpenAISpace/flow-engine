@@ -1,0 +1,13 @@
+{
+  "entryPoints": ["src/index.ts"],
+  "out": "docs",
+  "name": "Flow Engine API 文档",
+  "includeVersion": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "theme": "default",
+  "categorizeByGroup": true,
+  "categoryOrder": ["Core", "Data", "Types", "Utils", "*"],
+  "readme": "README.md"
+} 
