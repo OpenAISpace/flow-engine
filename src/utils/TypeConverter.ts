@@ -82,6 +82,16 @@ export class TypeConverter {
           return { success: false, value, errors };
       }
 
+      // 特殊处理整数类型：浮点数到整数通常是被允许的转换操作
+      if (
+        targetType === "integer" &&
+        typeof value === "number" &&
+        !Number.isInteger(value)
+      ) {
+        // 清除可能添加的警告，因为这是合法的转换
+        errors.length = 0;
+      }
+
       // 如果有错误，则转换失败
       if (errors.length > 0) {
         return { success: false, value, errors };
@@ -161,14 +171,27 @@ export class TypeConverter {
    * 转换为整数
    */
   private static convertToInteger(value: any, errors: string[]): number {
-    const num = this.convertToNumber(value, errors);
+    // 如果是整数，直接返回
+    if (typeof value === "number" && Number.isInteger(value)) {
+      return value;
+    }
+
+    // 尝试转换为数字
+    let num = value;
+    if (typeof value !== "number") {
+      num = this.convertToNumber(value, errors);
+    }
+
     if (errors.length > 0) {
       return 0;
     }
 
-    const int = Math.floor(num);
-    if (int !== num) {
-      errors.push(`数字 ${num} 被截断为整数 ${int}`);
+    // 取整数部分
+    const int = Math.trunc(num);
+    if (int !== num && typeof value === "number") {
+      // 只在输入本身就是非整数数字时添加警告，但不视为错误
+      console.warn(`数字 ${num} 被截断为整数 ${int}`);
+      // 不再添加到错误列表: errors.push(`数字 ${num} 被截断为整数 ${int}`);
     }
 
     return int;

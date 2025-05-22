@@ -110,7 +110,8 @@ export class SchemaValidator {
 
     // 处理日期类型
     if (
-      data instanceof Date &&
+      (data instanceof Date ||
+        (typeof data === "string" && !isNaN(Date.parse(data)))) &&
       (schemaType === "date" ||
         schemaType === "datetime" ||
         (Array.isArray(schemaType) &&
@@ -418,15 +419,31 @@ export class SchemaValidator {
     errors: string[]
   ): void {
     // 确保值是有效的日期
-    if (
-      !(value instanceof Date) &&
-      (typeof value !== "string" || isNaN(Date.parse(value)))
-    ) {
+    if (value instanceof Date) {
+      // 如果是Date类型直接通过
+      return;
+    }
+
+    // 处理字符串日期
+    if (typeof value === "string") {
+      try {
+        const dateObj = new Date(value);
+        // 检查是否是有效日期 (不是Invalid Date)
+        if (!isNaN(dateObj.getTime())) {
+          return;
+        }
+      } catch (e) {
+        // 日期解析错误，继续到下面的错误处理
+      }
+    }
+
+    // 其他类型尝试转换为日期
+    if (typeof value !== "string" || isNaN(Date.parse(String(value)))) {
       errors.push(`值 ${value} 不是有效的日期`);
       return;
     }
 
-    const dateValue = value instanceof Date ? value : new Date(value);
+    const dateValue = new Date(String(value));
 
     // 这里可以添加日期特定的验证，例如最小/最大日期
     if (schema.minimum !== undefined) {

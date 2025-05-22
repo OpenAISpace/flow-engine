@@ -13,6 +13,7 @@ import { StepHandlerRegistry, HandlerMetadata } from "./StepHandlerRegistry.js";
 import { ExecutionContext } from "./ExecutionContext.js";
 import { DataMapper } from "../data/DataMapper.js";
 import { ConditionEvaluator } from "../data/ConditionEvaluator.js";
+import { SchemaValidator } from "../utils/SchemaValidator.js";
 
 /**
  * 工作流引擎核心
@@ -450,12 +451,37 @@ export class WorkflowEngine {
       this.emitEvent("step.breakpoint", { step, context });
       return null;
     }
+
     // 准备输入数据
     const inputData = DataMapper.mapInput(
       context.initialData,
       step.inputMapping || {},
       context
     );
+
+    // 获取步骤输入Schema
+    const inputSchema =
+      step.input || this.handlerRegistry.getMetadata(step.handler)?.inputSchema;
+
+    // 如果存在输入Schema，进行类型验证
+    if (inputSchema) {
+      const validationResult = SchemaValidator.validate(inputData, inputSchema);
+
+      // 如果验证失败，抛出错误
+      if (!validationResult.valid) {
+        const errorMessage = `步骤 "${
+          step.id
+        }" 的输入数据验证失败: ${validationResult.errors.join("; ")}`;
+        this.emitEvent("step.validation_failed", {
+          step,
+          context,
+          errors: validationResult.errors,
+          inputData,
+        });
+        throw new Error(errorMessage);
+      }
+    }
+
     // 重试逻辑
     const maxRetries = step.retry?.maxRetries || 0;
     const retryDelay = step.retry?.delay || 1000;

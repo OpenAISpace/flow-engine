@@ -121,33 +121,57 @@ export class DataMapper {
         }
         return String(evaluatedArgs[0]).toLowerCase();
       case "sum":
-        if (!Array.isArray(evaluatedArgs)) {
-          // sum函数现在可以接受单个数字或者一个数字数组
-          if (typeof evaluatedArgs[0] === "number") {
-            return evaluatedArgs[0];
-          }
-          console.warn(
-            `函数 "sum" 的参数必须是数字数组，但收到: ${typeof evaluatedArgs}`
-          );
-          return 0;
+        // 修复sum函数逻辑
+        if (Array.isArray(evaluatedArgs[0])) {
+          // 如果第一个参数是数组，计算数组中所有数字的和
+          return evaluatedArgs[0].reduce((sum, val) => {
+            const num = Number(val);
+            if (isNaN(num)) {
+              console.warn(`函数 "sum" 在累加时遇到非数字值: ${val}`);
+              return sum;
+            }
+            return sum + num;
+          }, 0);
+        } else {
+          // 如果不是数组而是提供了多个参数，计算所有参数的和
+          return evaluatedArgs.reduce((sum, val) => {
+            const num = Number(val);
+            if (isNaN(num)) {
+              console.warn(`函数 "sum" 在累加时遇到非数字值: ${val}`);
+              return sum;
+            }
+            return sum + num;
+          }, 0);
         }
-        return evaluatedArgs.reduce((sum, val) => {
-          const num = Number(val);
-          if (isNaN(num)) {
-            console.warn(`函数 "sum" 在累加时遇到非数字值: ${val}`);
-            return sum;
-          }
-          return sum + num;
-        }, 0);
       default:
         throw new Error(`未知函数: ${funcName}`);
     }
   }
 
   static getNestedValue(obj: Record<string, any>, path: string): any {
-    return path.split(".").reduce((current, key) => {
-      return current && typeof current === "object" ? current[key] : undefined;
+    // 使用路径获取嵌套值，保留原始类型
+    const result = path.split(".").reduce((current, key) => {
+      // 检查当前对象是否存在且是对象类型
+      if (
+        current === null ||
+        current === undefined ||
+        typeof current !== "object"
+      ) {
+        return undefined;
+      }
+
+      // 保持原始类型（数字、布尔值等），不要进行类型转换
+      return current[key];
     }, obj);
+
+    // 记录嵌套值的类型，帮助调试
+    if (result !== undefined) {
+      console.log(
+        `DataMapper: 获取路径 ${path} 的值 ${result}，类型为 ${typeof result}`
+      );
+    }
+
+    return result;
   }
 
   static mapToObject<T>(map: Map<string, T>): Record<string, T> {
