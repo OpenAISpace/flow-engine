@@ -27,35 +27,12 @@ export class DataMapper {
     return result;
   }
 
-  static mapOutput(
-    data: Record<string, any>,
-    mapping: Record<string, any>,
-    context: ExecutionContextRuntime
-  ): Record<string, any> {
-    if (!mapping || Object.keys(mapping).length === 0) {
-      return data;
-    }
-
-    const result: Record<string, any> = {};
-
-    for (const [targetKey, sourceExpression] of Object.entries(mapping)) {
-      result[targetKey] = this.evaluateExpression(sourceExpression, {
-        output: data,
-        context: context.globalContext,
-        variables: Object.fromEntries(context.variables),
-        stepResults: this.mapToObject(context.stepResults),
-      });
-    }
-
-    return result;
-  }
-
   static evaluateExpression(expression: any, scope: Record<string, any>): any {
     if (typeof expression === "string") {
       if (expression.startsWith("$")) {
         return this.evaluateJSONPath(expression, scope);
       } else {
-        return this.evaluatePropertyPath(expression, scope);
+        return expression;
       }
     } else if (typeof expression === "object" && expression !== null) {
       return this.evaluateComplexExpression(expression, scope);
@@ -65,12 +42,12 @@ export class DataMapper {
   }
 
   static evaluateJSONPath(path: string, scope: Record<string, any>): any {
-    const cleanPath = path.substring(1);
-    return this.getNestedValue(scope, cleanPath);
-  }
-
-  static evaluatePropertyPath(path: string, scope: Record<string, any>): any {
-    return this.getNestedValue(scope, path);
+    const cleanPath = path.substring(1); // 去掉开头的$
+    const value = this.getNestedValue(scope, cleanPath);
+    if (value === undefined) {
+      console.warn(`在作用域中未找到路径: ${path}`);
+    }
+    return value;
   }
 
   static evaluateComplexExpression(
@@ -113,15 +90,57 @@ export class DataMapper {
       case "uuid":
         return this.generateUUID();
       case "length":
+        if (evaluatedArgs[0] === undefined || evaluatedArgs[0] === null) {
+          //允许length作用于undefined或null，返回0
+          return 0;
+        }
+        if (
+          typeof evaluatedArgs[0] !== "string" &&
+          !Array.isArray(evaluatedArgs[0])
+        ) {
+          console.warn(
+            `函数 "length" 的参数必须是字符串或数组，但收到: ${typeof evaluatedArgs[0]}`
+          );
+          return 0;
+        }
         return evaluatedArgs[0]?.length || 0;
       case "upper":
+        if (typeof evaluatedArgs[0] !== "string") {
+          console.warn(
+            `函数 "upper" 的参数必须是字符串，但收到: ${typeof evaluatedArgs[0]}`
+          );
+          return String(evaluatedArgs[0]); // 尝试转换为字符串
+        }
         return String(evaluatedArgs[0]).toUpperCase();
       case "lower":
+        if (typeof evaluatedArgs[0] !== "string") {
+          console.warn(
+            `函数 "lower" 的参数必须是字符串，但收到: ${typeof evaluatedArgs[0]}`
+          );
+          return String(evaluatedArgs[0]); // 尝试转换为字符串
+        }
         return String(evaluatedArgs[0]).toLowerCase();
       case "sum":
-        return evaluatedArgs.reduce((sum, val) => sum + (Number(val) || 0), 0);
+        if (!Array.isArray(evaluatedArgs)) {
+          // sum函数现在可以接受单个数字或者一个数字数组
+          if (typeof evaluatedArgs[0] === "number") {
+            return evaluatedArgs[0];
+          }
+          console.warn(
+            `函数 "sum" 的参数必须是数字数组，但收到: ${typeof evaluatedArgs}`
+          );
+          return 0;
+        }
+        return evaluatedArgs.reduce((sum, val) => {
+          const num = Number(val);
+          if (isNaN(num)) {
+            console.warn(`函数 "sum" 在累加时遇到非数字值: ${val}`);
+            return sum;
+          }
+          return sum + num;
+        }, 0);
       default:
-        throw new Error(`Unknown function: ${funcName}`);
+        throw new Error(`未知函数: ${funcName}`);
     }
   }
 

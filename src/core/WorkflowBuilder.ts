@@ -158,12 +158,18 @@ export class WorkflowBuilder {
     toStepId: string,
     type?: string
   ): WorkflowBuilder {
+    if (!this.workflow.steps) {
+      throw new Error("工作流中没有任何步骤，无法添加依赖");
+    }
     // 检查步骤是否存在
-    if (
-      !this.workflow.steps?.find(s => s.id === fromStepId) ||
-      !this.workflow.steps?.find(s => s.id === toStepId)
-    ) {
-      throw new Error(`步骤不存在: ${fromStepId} 或 ${toStepId}`);
+    const fromStepExists = this.workflow.steps.find(s => s.id === fromStepId);
+    const toStepExists = this.workflow.steps.find(s => s.id === toStepId);
+
+    if (!fromStepExists) {
+      throw new Error(`依赖的源步骤不存在: ${fromStepId}`);
+    }
+    if (!toStepExists) {
+      throw new Error(`依赖的目标步骤不存在: ${toStepId}`);
     }
 
     // 在步骤上添加依赖
@@ -377,7 +383,16 @@ export class WorkflowBuilder {
    * 从JSON导入
    */
   fromJSON(json: string | Record<string, any>): WorkflowBuilder {
-    const data = typeof json === "string" ? JSON.parse(json) : json;
+    let data;
+    if (typeof json === "string") {
+      try {
+        data = JSON.parse(json);
+      } catch (error) {
+        throw new Error(`无效的JSON字符串: ${(error as Error).message}`);
+      }
+    } else {
+      data = json;
+    }
     this.workflow = { ...this.workflow, ...data };
     return this;
   }

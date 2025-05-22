@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events';
+import { EventEmitter } from "events";
 
 /**
  * 工作流定义接口
@@ -60,19 +60,18 @@ export interface SchemaProperty {
 export interface StepConfig {
   id: string;
   name: string;
-  type: 'task' | 'condition' | 'parallel' | 'loop' | 'custom';
+  type: "task" | "condition" | "parallel" | "loop" | "custom";
   handler: string;
   input?: SchemaDefinition;
   output?: SchemaDefinition;
   inputMapping?: Record<string, any>;
-  outputMapping?: Record<string, any>;
   retry?: RetryPolicy;
   timeout?: number;
   condition?: ConditionExpression;
   dependsOn?: string[];
   parallel?: boolean;
   loop?: LoopConfig;
-  onError?: 'throw' | 'continue' | 'retry';
+  onError?: "throw" | "continue" | "retry";
   metadata?: Record<string, any>;
 }
 
@@ -104,7 +103,18 @@ export type ConditionExpression = string | ConditionObject;
  * 条件对象接口
  */
 export interface ConditionObject {
-  operator: 'and' | 'or' | 'not' | 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'contains' | 'in';
+  operator:
+    | "and"
+    | "or"
+    | "not"
+    | "eq"
+    | "ne"
+    | "gt"
+    | "gte"
+    | "lt"
+    | "lte"
+    | "contains"
+    | "in";
   left?: any;
   right?: any;
   conditions?: ConditionExpression[];
@@ -125,7 +135,7 @@ export interface ConditionRule {
  */
 export interface ErrorHandler {
   stepId: string;
-  action: 'retry' | 'continue' | 'abort' | 'compensate';
+  action: "retry" | "continue" | "abort" | "compensate";
   maxRetries?: number;
   compensationStep?: string;
 }
@@ -167,7 +177,7 @@ export interface ExecutionContextData {
   executionId: string;
   startTime: number;
   endTime?: number;
-  status: 'running' | 'completed' | 'failed' | 'paused' | 'cancelled';
+  status: "running" | "completed" | "failed" | "paused" | "cancelled";
   globalContext: Record<string, any>;
   stepResults: Record<string, StepResult>;
   variables: Record<string, any>;
@@ -190,7 +200,7 @@ export interface ExecutionContextRuntime {
   executionId: string;
   startTime: number;
   endTime?: number;
-  status: 'running' | 'completed' | 'failed' | 'paused' | 'cancelled';
+  status: "running" | "completed" | "failed" | "paused" | "cancelled";
   globalContext: Record<string, any>;
   stepResults: Map<string, StepResult>;
   variables: Map<string, any>;
@@ -208,7 +218,7 @@ export interface ExecutionContextRuntime {
   generateExecutionId(): string;
   setStepResult(stepId: string, result: any): void;
   getStepResult(stepId: string): StepResult | undefined;
-  addHistoryRecord(record: Omit<HistoryRecord, 'timestamp'>): void;
+  addHistoryRecord(record: Omit<HistoryRecord, "timestamp">): void;
   serialize(): ExecutionContextData;
 }
 
