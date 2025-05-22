@@ -1,4 +1,5 @@
-import { ExecutionContextRuntime, SchemaDefinition } from "../types/index.js";
+import { ExecutionContextRuntime } from "../types/index.js";
+import { getBuiltinNodes, NodeMetadata } from "../nodes/index.js";
 
 /**
  * 处理器元数据接口
@@ -6,8 +7,8 @@ import { ExecutionContextRuntime, SchemaDefinition } from "../types/index.js";
 export interface HandlerMetadata {
   name: string;
   description?: string;
-  inputSchema: SchemaDefinition;
-  outputSchema: SchemaDefinition;
+  inputSchema: any;
+  outputSchema: any;
   category?: string;
   icon?: string;
   displayName?: string;
@@ -104,165 +105,17 @@ export class StepHandlerRegistry {
    * 注册内置处理器
    */
   private registerBuiltinHandlers(): void {
-    // HTTP请求处理器
-    this.register(
-      "http",
-      async (input, context) => {
-        const { url, method = "GET", headers = {}, body } = input;
+    // 获取所有内置节点
+    const builtinNodes = getBuiltinNodes();
 
-        try {
-          const response = await fetch(url, {
-            method,
-            headers: { "Content-Type": "application/json", ...headers },
-            body: body ? JSON.stringify(body) : undefined,
-          });
-
-          return await response.json();
-        } catch (error) {
-          throw new Error(`HTTP request failed: ${(error as Error).message}`);
-        }
-      },
-      {
-        description: "Makes HTTP requests to external APIs",
-        category: "Network",
-        inputSchema: {
-          type: "object",
-          properties: {
-            url: {
-              type: "string",
-              format: "uri",
-              description: "Target URL for the request",
-            },
-            method: {
-              type: "string",
-              enum: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-              default: "GET",
-            },
-            headers: {
-              type: "object",
-              additionalProperties: { type: "string" },
-            },
-            body: {
-              type: "object",
-              description: "Request body (for POST, PUT, PATCH)",
-            },
-          },
-          required: ["url"],
-        },
-        outputSchema: {
-          type: "object",
-          description: "Response from the HTTP request",
-        },
-        examples: [
-          {
-            name: "获取用户数据",
-            input: {
-              url: "https://api.example.com/users/1",
-              method: "GET",
-            },
-          },
-        ],
-      }
-    );
-
-    // 延迟处理器
-    this.register(
-      "delay",
-      async input => {
-        const { duration = 1000 } = input;
-        await new Promise(resolve => setTimeout(resolve, duration));
-        return { delayed: true, duration };
-      },
-      {
-        description: "延迟执行指定的毫秒数",
-        category: "工具",
-        inputSchema: {
-          type: "object",
-          properties: {
-            duration: {
-              type: "number",
-              description: "延迟时间（毫秒）",
-              default: 1000,
-            },
-          },
-        },
-        outputSchema: {
-          type: "object",
-          properties: {
-            delayed: { type: "boolean" },
-            duration: { type: "number" },
-          },
-        },
-      }
-    );
-
-    // 日志处理器
-    this.register(
-      "log",
-      async input => {
-        const { message, level = "info", data } = input;
-
-        switch (level) {
-          case "error":
-            console.error(message, data);
-            break;
-          case "warn":
-            console.warn(message, data);
-            break;
-          case "debug":
-            console.debug(message, data);
-            break;
-          case "info":
-          default:
-            console.info(message, data);
-        }
-
-        return { logged: true, timestamp: Date.now() };
-      },
-      {
-        description: "记录日志信息",
-        category: "工具",
-        inputSchema: {
-          type: "object",
-          properties: {
-            message: { type: "string", description: "日志消息" },
-            level: {
-              type: "string",
-              enum: ["info", "warn", "error", "debug"],
-              default: "info",
-            },
-            data: { type: "object", description: "附加数据" },
-          },
-          required: ["message"],
-        },
-        outputSchema: {
-          type: "object",
-          properties: {
-            logged: { type: "boolean" },
-            timestamp: { type: "number" },
-          },
-        },
-      }
-    );
-
-    // 空操作处理器
-    this.register(
-      "noop",
-      async () => {
-        return { executed: true };
-      },
-      {
-        description: "不执行任何操作的处理器",
-        category: "工具",
-        inputSchema: { type: "object" },
-        outputSchema: {
-          type: "object",
-          properties: {
-            executed: { type: "boolean" },
-          },
-        },
-      }
-    );
+    // 注册每个节点的处理器和元数据
+    for (const node of builtinNodes) {
+      this.register(
+        node.name,
+        async (input, context) => await node.execute(input, context),
+        node.metadata as HandlerMetadata
+      );
+    }
   }
 
   /**

@@ -34,24 +34,75 @@ export interface RetryPolicy {
 }
 
 /**
+ * JSON Schema 类型联合定义
+ */
+export type JSONSchemaType =
+  | "string"
+  | "number"
+  | "integer"
+  | "boolean"
+  | "object"
+  | "array"
+  | "null"
+  | "date" // 自定义时间类型，用于后续处理
+  | "datetime"; // 自定义日期时间类型
+
+/**
  * Schema定义接口
  */
 export interface SchemaDefinition {
-  type: string;
-  properties?: Record<string, SchemaProperty>;
-  required?: string[];
-  additionalProperties?: boolean;
-  [key: string]: any;
-}
-
-export interface SchemaProperty {
-  type: string;
+  type: JSONSchemaType | JSONSchemaType[]; // 允许类型为联合类型，例如 ["string", "null"]
   title?: string;
   description?: string;
   default?: any;
   enum?: any[];
-  format?: string;
-  [key: string]: any;
+  format?: string; // 例如: date-time, email, hostname, ipv4, ipv6, uri, etc.
+
+  // 数字和整数类型约束
+  multipleOf?: number;
+  maximum?: number;
+  exclusiveMaximum?: number;
+  minimum?: number;
+  exclusiveMinimum?: number;
+
+  // 字符串类型约束
+  maxLength?: number;
+  minLength?: number;
+  pattern?: string; // 正则表达式
+
+  // 数组类型约束
+  items?: SchemaDefinition | SchemaDefinition[]; // 单个schema或元组schema
+  additionalItems?: boolean | SchemaDefinition;
+  maxItems?: number;
+  minItems?: number;
+  uniqueItems?: boolean;
+  contains?: SchemaDefinition;
+
+  // 对象类型约束
+  maxProperties?: number;
+  minProperties?: number;
+  required?: string[];
+  properties?: Record<string, SchemaDefinition>;
+  additionalProperties?: boolean | SchemaDefinition;
+  dependencies?: Record<string, string[] | SchemaDefinition>;
+  patternProperties?: Record<string, SchemaDefinition>;
+
+  // 条件Schema
+  if?: SchemaDefinition;
+  then?: SchemaDefinition;
+  else?: SchemaDefinition;
+  allOf?: SchemaDefinition[];
+  anyOf?: SchemaDefinition[];
+  oneOf?: SchemaDefinition[];
+  not?: SchemaDefinition;
+
+  // 元数据
+  [key: string]: any; // 允许其他自定义属性
+}
+
+export interface SchemaProperty extends SchemaDefinition {
+  // SchemaProperty 继承 SchemaDefinition 的所有属性
+  // 可以根据需要添加特定于属性的额外字段，但通常 SchemaDefinition 已经足够
 }
 
 /**
