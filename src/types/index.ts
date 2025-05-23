@@ -100,10 +100,7 @@ export interface SchemaDefinition {
   [key: string]: any; // 允许其他自定义属性
 }
 
-export interface SchemaProperty extends SchemaDefinition {
-  // SchemaProperty 继承 SchemaDefinition 的所有属性
-  // 可以根据需要添加特定于属性的额外字段，但通常 SchemaDefinition 已经足够
-}
+export type SchemaProperty = SchemaDefinition;
 
 /**
  * 步骤配置接口

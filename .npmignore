@@ -1,0 +1,31 @@
+# 源代码
+/src
+/examples
+
+# 测试文件
+__tests__
+*.test.ts
+*.spec.ts
+coverage
+.nyc_output
+
+# 配置文件
+.editorconfig
+.eslintrc.json
+.prettierrc
+tsconfig.json
+vite.config.ts
+vitest.config.ts
+typedoc.json
+
+# 其他
+.github
+.vscode
+.idea
+.DS_Store
+*.log
+temp
+tmp
+
+# 保留dist目录以发布编译后的代码
+!/dist 

@@ -1,5 +1,4 @@
 import { EventEmitter } from "events";
-import { v4 as uuidv4 } from "uuid";
 import {
   WorkflowDefinition,
   WorkflowEngineOptions,
@@ -47,7 +46,7 @@ export class WorkflowEngine {
    */
   registerHandler(
     name: string,
-    handler: Function,
+    handler: (input: any, context: ExecutionContext) => Promise<any>,
     metadata?: HandlerMetadata
   ): void {
     this.handlerRegistry.register(

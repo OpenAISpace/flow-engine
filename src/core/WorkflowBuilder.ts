@@ -3,7 +3,6 @@ import {
   StepConfig,
   SchemaDefinition,
   RetryPolicy,
-  Dependency,
   ConditionRule,
   ErrorHandler,
 } from "../types/index.js";

@@ -1,5 +1,5 @@
 import { ExecutionContextRuntime } from "../types/index.js";
-import { getBuiltinNodes, NodeMetadata } from "../nodes/index.js";
+import { getBuiltinNodes } from "../nodes/index.js";
 
 /**
  * 处理器元数据接口

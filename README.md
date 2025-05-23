@@ -4,6 +4,113 @@
 
 一个基于 TypeScript 的无状态工作流引擎框架，支持可视化拖拽、DSL 定义、断点继续、自动重试等高级功能。专为构建复杂业务流程自动化、数据处理管道和集成场景而设计。
 
+## 安装
+
+```bash
+npm install flow-engine
+```
+
+## 快速开始
+
+以下是一个简单的工作流示例：
+
+```javascript
+import { WorkflowBuilder, WorkflowEngine } from "flow-engine";
+
+// 创建工作流
+const workflow = new WorkflowBuilder()
+  .setBasicInfo({
+    name: "简单工作流示例",
+    description: "演示基本功能的工作流",
+  })
+  .addStep({
+    id: "start",
+    name: "开始节点",
+    type: "task",
+    handler: "log",
+    inputMapping: {
+      message: "工作流开始执行",
+    },
+  })
+  .addStep({
+    id: "process",
+    name: "处理节点",
+    type: "task",
+    handler: "log",
+    inputMapping: {
+      message: "处理数据",
+      data: { value: 42 },
+    },
+  })
+  .addStep({
+    id: "end",
+    name: "结束节点",
+    type: "task",
+    handler: "log",
+    inputMapping: {
+      message: "工作流执行完成",
+      result: "$stepResults.process.result",
+    },
+  })
+  .build();
+
+// 创建工作流引擎
+const engine = new WorkflowEngine();
+
+// 执行工作流
+async function run() {
+  try {
+    const result = await engine.execute(workflow, { inputData: "示例输入" });
+    console.log("工作流执行结果:", result);
+  } catch (error) {
+    console.error("工作流执行失败:", error);
+  }
+}
+
+run();
+```
+
+## 自定义节点
+
+您可以轻松创建和注册自定义节点：
+
+```javascript
+// 创建自定义节点处理器
+const customHandler = async (input, context) => {
+  console.log("执行自定义处理:", input);
+  return {
+    success: true,
+    data: {
+      ...input,
+      processed: true,
+      timestamp: Date.now(),
+    },
+  };
+};
+
+// 注册自定义处理器
+engine.registerHandler("customProcessor", customHandler, {
+  description: "自定义处理节点",
+  inputSchema: {
+    type: "object",
+    properties: {
+      data: { type: "object" },
+    },
+  },
+});
+
+// 在工作流中使用
+workflow.addStep({
+  id: "customStep",
+  name: "自定义处理",
+  type: "custom",
+  handler: "customProcessor",
+  inputMapping: {
+    data: { value: 123 },
+  },
+});
+```
+
 ## 项目介绍
 
 Flow Engine 是一个轻量级但功能强大的工作流引擎，使开发人员能够以声明式方式定义和执行复杂的业务流程。它采用无状态架构设计，可以无缝集成到现代云原生环境中，同时保持高性能和可靠性。

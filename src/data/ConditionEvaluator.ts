@@ -71,12 +71,13 @@ export class ConditionEvaluator {
         return String(this.getValue(left, context)).includes(
           String(this.getValue(right, context))
         );
-      case "in":
+      case "in": {
         const rightValue = this.getValue(right, context);
         return (
           Array.isArray(rightValue) &&
           rightValue.includes(this.getValue(left, context))
         );
+      }
       default:
         console.warn(`未知的条件操作符: ${operator}`);
         return false;
@@ -96,17 +97,6 @@ export class ConditionEvaluator {
 
   static safeEval(expr: string, scope: Record<string, any>): boolean {
     // 简化版安全计算器
-    const allowedOperators = [
-      "==",
-      "!=",
-      ">",
-      "<",
-      ">=",
-      "<=",
-      "&&",
-      "||",
-      "!",
-    ];
     const cleanExpr = expr.replace(/\$(\w+\.?\w*)/g, (match, path) => {
       return JSON.stringify(DataMapper.getNestedValue(scope, path));
     });

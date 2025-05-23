@@ -4,7 +4,7 @@ import {
   StepResult,
   ExecutionError,
   HistoryRecord,
-} from '../types/index.js';
+} from "../types/index.js";
 
 /**
  * 执行上下文类
@@ -14,7 +14,7 @@ export class ExecutionContext implements ExecutionContextRuntime {
   executionId: string;
   startTime: number;
   endTime?: number;
-  status: 'running' | 'completed' | 'failed' | 'paused' | 'cancelled';
+  status: "running" | "completed" | "failed" | "paused" | "cancelled";
   globalContext: Record<string, any>;
   stepResults: Map<string, StepResult>;
   variables: Map<string, any>;
@@ -32,7 +32,7 @@ export class ExecutionContext implements ExecutionContextRuntime {
     this.workflowId = workflowId;
     this.executionId = this.generateExecutionId();
     this.startTime = Date.now();
-    this.status = 'running';
+    this.status = "running";
 
     // 数据上下文
     this.globalContext = {};
@@ -73,7 +73,7 @@ export class ExecutionContext implements ExecutionContextRuntime {
     return this.stepResults.get(stepId);
   }
 
-  addHistoryRecord(record: Omit<HistoryRecord, 'timestamp'>): void {
+  addHistoryRecord(record: Omit<HistoryRecord, "timestamp">): void {
     this.executionHistory.push({
       ...record,
       timestamp: Date.now(),

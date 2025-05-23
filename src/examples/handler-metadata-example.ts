@@ -1,7 +1,6 @@
 import {
   WorkflowEngine,
   WorkflowDSL,
-  StepDefinition,
   HandlerMetadata,
   SchemaDefinition,
   ExecutionContextRuntime,

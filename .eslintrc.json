@@ -1,25 +1,26 @@
 {
   "root": true,
   "parser": "@typescript-eslint/parser",
-  "plugins": [
-    "@typescript-eslint",
-    "prettier"
-  ],
+  "plugins": ["@typescript-eslint", "prettier", "unused-imports"],
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
     "prettier"
   ],
   "rules": {
-    "@typescript-eslint/explicit-module-boundary-types": "warn",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
-    "prettier/prettier": "error"
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      { "argsIgnorePattern": "^_" }
+    ],
+    "prettier/prettier": "error",
+    "@typescript-eslint/no-implicit-any": "off"
   },
   "env": {
     "browser": true,
     "node": true,
     "es6": true
   },
-  "ignorePatterns": ["dist", "node_modules", "coverage"]
-} 
+  "ignorePatterns": ["dist", "node_modules", "coverage", "__tests__"]
+}
